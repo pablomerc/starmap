@@ -1,0 +1,43 @@
+name: starry-env-fromgit # Or your preferred name
+# https://github.com/rodluger/starry/issues/307
+channels:
+  - conda-forge # Still the best channel for most scientific packages
+  - defaults
+
+dependencies:
+  # --- Core Conda Packages ---
+  - python=3.9        # <-- Replace with your actual Python version (e.g., 3.9, 3.10)
+  - pip               # Essential to use the pip section below
+  # Add other major packages you want Conda to manage:
+  - pymc3=3.11.5      # Or latest compatible version
+  - exoplanet=0.5.3   # Check if exoplanet also recommends pip; if so, move it below
+  # - theano-pymc=1.1.2 # Usually pulled in by pymc3 via conda
+  # - aesara-theano-fallback=0.1.0 # Usually pulled in by pymc3 via conda
+  - pymc3-ext=0.1.1
+  - astropy=5.2.1
+  - numpy=1.21        # Use major.minor, conda will pick a specific build
+  - scipy=1.7.3
+  - pandas=1.5.2
+  - matplotlib=3.6.3
+  - arviz=0.12.1
+  - jupyter=1.0.0
+  - notebook=6.5.2
+  - ipykernel=6.20.1
+  - ipywidgets=8.0.4
+  - bokeh=3.0.3
+  - xarray=2022.12.0
+  - netcdf4=1.6.2     # Good candidate for conda management
+  # Add other essential conda packages... Make sure versions are compatible.
+
+
+
+  # --- Pip-specific Packages ---
+  - pip:
+    - starry==1.2.0   # <-- Install starry via pip with the specific version
+    # - exoplanet==0.5.3 # <-- Add exoplanet here IF it also recommends pip install
+    # - exoplanet-core==0.1.2 # If needed via pip
+    # Add any other packages ONLY found on PyPI or where the PyPI version is required
+    # - some-other-pip-package==X.Y.Z
+    - tqdm==4.64.1 # If you need a specific version of tqdm
+
+    #pip install tqdm==4.64.1
