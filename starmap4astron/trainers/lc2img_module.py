@@ -30,7 +30,21 @@ class LC2ImgModule(pl.LightningModule):
         lc, img = batch
         pred = self(lc)
         loss = F.l1_loss(pred, img)
-        self.log('train/loss', loss)
+        self.log('train/loss', loss, on_epoch=True)
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        lc, img = batch
+        pred = self(lc)
+        loss = F.l1_loss(pred, img)
+        self.log('val/loss', loss,on_epoch=True)
+        return loss
+
+    def test_step(self, batch, batch_idx):
+        lc, img = batch
+        pred = self(lc)
+        loss = F.l1_loss(pred, img)
+        self.log('test/loss', loss,on_epoch=True)
         return loss
 
     def configure_optimizers(self):
