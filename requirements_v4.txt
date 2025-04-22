@@ -1,0 +1,8 @@
+# requirements.txt for starry_env_v3
+# python==3.10
+mkl-service>=2.3.0
+numpy>=1.19.2
+scipy>=1.5.0
+setuptools>=51.3.3
+ffmpeg>=4.2.2
+ipywidgets>=7.5.1

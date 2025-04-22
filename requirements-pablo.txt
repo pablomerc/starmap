@@ -1,0 +1,18 @@
+pandas
+numpy==1.23.5
+matplotlib
+seaborn
+scipy
+starry
+ipykernel
+# pymc>=4
+exoplanet-core
+ipywidgets
+
+
+pymc3==3.11.4
+xarray==0.20.1
+# pip uninstall pymc xarray
+# pip install numpy==1.23.5
+# pip install pymc3==3.11.4
+# pip install xarray==0.20.1
