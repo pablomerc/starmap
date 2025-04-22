@@ -10,6 +10,8 @@ from torch.utils.data import DataLoader, random_split
 from data.dataset import StarryNPZDataset
 from pytorch_lightning.callbacks import Callback
 
+import json
+
 
 class LossHistory(Callback):
     """Collect train & val losses so we can plot them after training."""
@@ -178,7 +180,15 @@ def main():
         print("Val losses:", loss_history.val_losses)
         print("Saved loss curve ➜", os.path.join(args.output_dir, "loss_curve.png"))
 
-
+        # Save loss values to JSON file for later use
+        loss_data = {
+            "epochs": list(epochs),
+            "train_losses": loss_history.train_losses,
+            "val_losses": loss_history.val_losses
+        }
+        with open(os.path.join(args.output_dir, "loss_data.json"), "w") as f:
+            json.dump(loss_data, f, indent=4)
+        print("Loss data saved to JSON file ➜", os.path.join(args.output_dir, "loss_data.json"))
 
 
     print("Training completed!")
