@@ -3,92 +3,126 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-# ────────────────────────────────────────────────────────────────────────────
-# Helper: residual block with optional dilation
-# ────────────────────────────────────────────────────────────────────────────
 class ResBlock1D(nn.Module):
     def __init__(self, channels: int, dilation: int = 1):
         super().__init__()
-        padding = dilation  # keep length unchanged
-        self.conv1 = nn.Conv1d(channels, channels, kernel_size=3,
-                               padding=padding, dilation=dilation, bias=False)
+        pad = dilation
+        self.conv1 = nn.Conv1d(channels, channels, 3,
+                               padding=pad, dilation=dilation, bias=False)
         self.bn1   = nn.BatchNorm1d(channels)
-        self.conv2 = nn.Conv1d(channels, channels, kernel_size=3,
-                               padding=padding, dilation=dilation, bias=False)
+        self.conv2 = nn.Conv1d(channels, channels, 3,
+                               padding=pad, dilation=dilation, bias=False)
         self.bn2   = nn.BatchNorm1d(channels)
 
     def forward(self, x):
         y = F.relu(self.bn1(self.conv1(x)))
         y = self.bn2(self.conv2(y))
-        return F.relu(x + y)          # skip connection
+        return F.relu(x + y)
 
 
-# ────────────────────────────────────────────────────────────────────────────
-# 1‑D encoder
-# ────────────────────────────────────────────────────────────────────────────
 class LightcurveEncoder1D(nn.Module):
     """
-    Encode a 1‑D light‑curve to a latent 2‑D grid.
+    1-D light-curve → (C, H, W) latent grid.
+
     Args
     ----
-    latent_channels : C   – channels in the output grid
-    grid_size       : (H, W)
-    in_channels     : input channels (1 for a single flux series)
-    base_channels   : width of the first conv layer
+    latent_channels : int
+        Number of output channels C.
+    grid_size : (H, W)
+        Spatial size of the output grid.
+    in_channels : int
+        Input channels (1 for flux).
+    base_channels : int
+        Width of the first convolution.
+    num_pyramid : int
+        Number of extra down-sampling conv stages (each halves length, doubles channels).
+    use_residuals : bool
+        Whether to include the dilated ResBlock1D stack.
+    res_dilations : list[int]
+        Dilation rates for each ResBlock1D (if use_residuals=True).
     """
     def __init__(self,
                  latent_channels: int = 256,
                  grid_size: tuple[int, int] = (8, 8),
                  in_channels: int = 1,
-                 base_channels: int = 64):
+                 base_channels: int = 64,
+                 num_pyramid: int = 3,
+                 use_residuals: bool = True,
+                 res_dilations: list[int] = [1, 2, 4, 8]):
         super().__init__()
 
-        self.grid_size = grid_size
+        H, W = grid_size
+        self.grid_size = (H, W)
         self.latent_channels = latent_channels
+        self.n_tokens = H * W
 
-        # Stem: wide receptive field, stride 2 to shrink sequence length
+        # ── Stem ───────────────────────────────────────────────────────────
         self.stem = nn.Sequential(
-            nn.Conv1d(in_channels, base_channels,
-                      kernel_size=7, stride=2, padding=3, bias=False),
+            nn.Conv1d(in_channels, base_channels, 7,
+                      stride=2, padding=3, bias=False),  # L → L/2
             nn.BatchNorm1d(base_channels),
-            nn.ReLU(True)
+            nn.ReLU(True),
         )
 
-        # Four residual blocks with exponentially increasing dilation
-        dilations = [1, 2, 4, 8]
-        channels  = base_channels
-        blocks = []
-        for d in dilations:
-            blocks.append(ResBlock1D(channels, dilation=d))
-        self.backbone = nn.Sequential(*blocks)
+        # ── Pyramid down-sampling ──────────────────────────────────────────
+        pyramid = []
+        c = base_channels
+        for _ in range(num_pyramid):
+            pyramid += [
+                nn.Conv1d(c, c * 2, 4, stride=2, padding=1, bias=False),
+                nn.BatchNorm1d(c * 2),
+                nn.ReLU(True),
+            ]
+            c *= 2
+        self.pyramid = nn.Sequential(*pyramid)
+        self.out_channels = c  # channels at coarsest scale
 
-        # Global aggregation
-        self.global_pool = nn.AdaptiveAvgPool1d(1)  # (B, C, 1) → (B, C)
+        # ── Optional residual stack ────────────────────────────────────────
+        self.use_residuals = use_residuals
+        if use_residuals:
+            self.res_stack = nn.Sequential(
+                *[ResBlock1D(c, d) for d in res_dilations]
+            )
 
-        # FC to latent grid (flattened)
-        grid_elems = latent_channels * grid_size[0] * grid_size[1]
-        self.proj = nn.Linear(channels, grid_elems)
+        # ── Token pooling + projection ─────────────────────────────────────
+        self.apool = nn.AdaptiveAvgPool1d(self.n_tokens)  # (B, c, H·W)
+        self.proj  = nn.Linear(self.out_channels, latent_channels)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        x: (B, 1, L) light‑curve
+        x: (B, in_channels, L)
         returns z: (B, C, H, W)
         """
-        y = self.stem(x)              # (B, 64, L/2)
-        y = self.backbone(y)          # (B, 64, L/2)
-        y = self.global_pool(y).squeeze(-1)     # (B, 64)
-        y = self.proj(y)                           # (B, C*H*W)
-        C, H, W = self.latent_channels, *self.grid_size
-        z = y.view(-1, C, H, W)
-        return z
+        y = self.stem(x)           # → (B, base, L/2)
+        y = self.pyramid(y)        # → (B, c, L/(2·2^num_pyramid))
+        if self.use_residuals:
+            y = self.res_stack(y)  # → (B, c, same)
+        y = self.apool(y)          # → (B, c, H·W)
+
+        # (B, c, tokens) → (B, tokens, c)
+        y = y.permute(0, 2, 1).contiguous()
+        y = self.proj(y)           # → (B, tokens, C)
+
+        # → (B, C, tokens) → (B, C, H, W)
+        y = y.permute(0, 2, 1)
+        B, C, _ = y.shape
+        H, W = self.grid_size
+        return y.view(B, C, H, W)
 
 
-# ────────────────────────────────────────────────────────────────────────────
-# quick sanity check
-# ────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    B, L = 4, 1024               # batch size, light‑curve length
-    x = torch.randn(B, 1, L)
-    encoder = LightcurveEncoder1D()
-    z = encoder(x)
-    print("latent shape:", z.shape)  # → (4, 256, 8, 8) - (B, C, H, W)
+    # test both variants
+    for use_res in [False, True]:
+        enc = LightcurveEncoder1D(
+            latent_channels=256,
+            grid_size=(8, 8),
+            in_channels=1,
+            base_channels=32,
+            num_pyramid=2,
+            use_residuals=use_res,
+            res_dilations=[1, 2]
+        )
+        x = torch.randn(4, 1, 1024)
+        z = enc(x)
+        print(f"use_residuals={use_res} → z.shape = {z.shape}")
+        # should print torch.Size([4, 256, 8, 8]) for both
