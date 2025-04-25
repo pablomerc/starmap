@@ -1,0 +1,24 @@
+{
+    "data_dir": "/Users/pablom.perez/Desktop/MIT-PhD-macbook/starmap/starmap4astron/synthetic_data_output/dataset2/synthetic_starry_data_part_0.npz",
+    "val_data_dir": null,
+    "val_split": 0.1,
+    "batch_size": 32,
+    "img_size": 64,
+    "latent_channels": 256,
+    "grid_h": 8,
+    "grid_w": 8,
+    "base_channels": 64,
+    "num_pyramid": 3,
+    "use_residuals": true,
+    "res_dilations": [
+        1,
+        2,
+        4,
+        8
+    ],
+    "mask_corners": false,
+    "lr": 0.001,
+    "max_epochs": 2,
+    "gpus": 1,
+    "output_dir": "./output"
+}

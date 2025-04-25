@@ -24,7 +24,7 @@ GRID_H=8                     # Grid height
 GRID_W=8                     # Grid width
 BASE_CHANNELS=64             # Number of base channels
 LR=1e-3                      # Learning rate
-MAX_EPOCHS=500               # Maximum number of epochs
+MAX_EPOCHS=50               # Maximum number of epochs
 GPUS=1                       # Number of GPUs to use
 OUTPUT_DIR="./output"        # Directory to save models and plots
 
