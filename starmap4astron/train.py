@@ -51,6 +51,7 @@ def main():
     parser.add_argument('--gpus', type=int, default=1)
     parser.add_argument('--output_dir', type=str, default='output',
                         help='Directory to save models and plots')
+    parser.add_argument('--mask_corners', action='store_true',help='If set, ignore corner pixels (only compute loss inside inscribed circle)')
     args = parser.parse_args()
 
     # Create output directory if it doesn't exist
@@ -62,7 +63,8 @@ def main():
         latent_channels=args.latent_channels,
         grid_size=(args.grid_h, args.grid_w),
         img_size=args.img_size,
-        base_channels=args.base_channels
+        base_channels=args.base_channels,
+        mask_corners=args.mask_corners
     )
 
     # Build DataLoader for training dataset
@@ -136,24 +138,24 @@ def main():
 
 
     # Initialize trainer
-    # trainer = pl.Trainer(
-    #     max_epochs=args.max_epochs,
-    #     accelerator="gpu" if torch.cuda.is_available() else "cpu",
-    #     devices=args.gpus if torch.cuda.is_available() else None,
-    #     callbacks=[loss_history, ckpt_cb],
-    #     logger=logger,
-    #     log_every_n_steps=10
-    # )
-
-        #For CPU
     trainer = pl.Trainer(
-    max_epochs=args.max_epochs,
-    accelerator="cpu",
-    devices=1,
-    log_every_n_steps=5,
-    callbacks=[loss_history, ckpt_cb],
-    logger=logger,
-)
+        max_epochs=args.max_epochs,
+        accelerator="gpu" if torch.cuda.is_available() else "cpu",
+        devices=args.gpus if torch.cuda.is_available() else 1,
+        callbacks=[loss_history, ckpt_cb],
+        logger=logger,
+        log_every_n_steps=5
+    )
+
+#         #For CPU
+#     trainer = pl.Trainer(
+#     max_epochs=args.max_epochs,
+#     accelerator="cpu",
+#     devices=1,
+#     log_every_n_steps=5,
+#     callbacks=[loss_history, ckpt_cb],
+#     logger=logger,
+# )
 
     # Train the model
     trainer.fit(model, train_loader, val_loader)

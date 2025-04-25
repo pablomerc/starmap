@@ -10,6 +10,7 @@ class LC2Img(nn.Module):
                  img_size: int = 256,
                  base_channels: int = 64):
         super().__init__()
+        self.img_size = img_size
         # your existing encoder
         self.encoder = LightcurveEncoder1D(
             latent_channels=latent_channels,
@@ -26,6 +27,9 @@ class LC2Img(nn.Module):
             out_channels=1,
             num_upsamples=ups
         )
+
+
+
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """

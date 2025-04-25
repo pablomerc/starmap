@@ -23,10 +23,13 @@ LATENT_CHANNELS=256          # Number of latent channels
 GRID_H=8                     # Grid height
 GRID_W=8                     # Grid width
 BASE_CHANNELS=64             # Number of base channels
-LR=1e-4                      # Learning rate
-MAX_EPOCHS=50               # Maximum number of epochs
+LR=1e-3                      # Learning rate
+MAX_EPOCHS=500               # Maximum number of epochs
 GPUS=1                       # Number of GPUs to use
 OUTPUT_DIR="./output"        # Directory to save models and plots
+
+# NEW: whether to enable corner‐masking
+MASK_CORNERS=false         # set to true to pass --mask_corners
 
 # Create output directory
 mkdir -p $OUTPUT_DIR
@@ -49,6 +52,11 @@ CMD="python /Users/pablom.perez/Desktop/MIT-PhD-macbook/starmap/starmap4astron/t
 # Add validation directory if provided
 if [ ! -z "$VAL_DATA_DIR" ]; then
   CMD="$CMD --val_data_dir \"$VAL_DATA_DIR\""
+fi
+
+# NEW: append the mask flag if requested
+if [ "$MASK_CORNERS" = true ]; then
+  CMD="$CMD --mask_corners"
 fi
 
 # Print the command
