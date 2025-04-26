@@ -2,6 +2,10 @@ import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 from models import LC2Img
+import torch.nn as nn
+
+import torchvision.models as models
+from torchmetrics.functional import structural_similarity_index_measure as ssim
 
 class LC2ImgModule(pl.LightningModule):
     """
@@ -16,7 +20,11 @@ class LC2ImgModule(pl.LightningModule):
                  num_pyramid: int = 3,
                  use_residuals: bool = True,
                  res_dilations: list[int] = [1,2,4,8],
-                 mask_corners: bool = True):
+                 mask_corners: bool = True,
+                 use_perceptual_loss: bool = False,
+                 use_ssim_loss: bool = False,
+                 lambda_perc: float = 0.1,
+                 lambda_ssim: float = 0.1):
         super().__init__()
         # register all args to self.hparams
         self.save_hyperparameters()
@@ -31,6 +39,18 @@ class LC2ImgModule(pl.LightningModule):
             use_residuals   = self.hparams.use_residuals,
             res_dilations   = self.hparams.res_dilations
         )
+
+        # ── perceptual feature extractor (frozen) ───────────
+        if self.hparams.use_perceptual_loss:
+            print("[LC2ImgModule] Using perceptual loss")
+            vgg = models.vgg16(weights=models.VGG16_Weights.IMAGENET1K_V1)
+            # relu2_2 features (up to index 16)
+            self.perc_net = nn.Sequential(*list(vgg.features)[:16]).eval()
+            for p in self.perc_net.parameters():
+                p.requires_grad_(False)
+
+
+
 
         # optionally build circular mask buffer
         if self.hparams.mask_corners:
