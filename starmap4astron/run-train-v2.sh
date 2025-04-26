@@ -21,23 +21,29 @@ DATA_DIR="/Users/pablom.perez/Desktop/MIT-PhD-macbook/starmap/starmap4astron/syn
 VAL_DATA_DIR=""               # Leave empty for automatic train/val split
 VAL_SPLIT=0.1                 # Validation split ratio (if no val dir)
 BATCH_SIZE=32                 # Batch size for training
-IMG_SIZE=64                   # Output image size
-LATENT_CHANNELS=256           # Number of latent channels
-GRID_H=8                      # Grid height
-GRID_W=8                      # Grid width
-BASE_CHANNELS=64              # Number of base channels
+IMG_SIZE=256                   # Output image size
+LATENT_CHANNELS=128           # Number of latent channels
+GRID_H=16                      # Grid height
+GRID_W=16                      # Grid width
+BASE_CHANNELS=32              # Number of base channels
 LR=1e-3                       # Learning rate
-MAX_EPOCHS=100                # Maximum number of epochs
+MAX_EPOCHS=20                # Maximum number of epochs
 GPUS=1                        # Number of GPUs to use
 OUTPUT_DIR="./output"         # Directory to save models and plots
 
 # ── New encoder hyper-parameters ───────────────────────────────────────────
 NUM_PYRAMID=3                 # how many extra down-sampling conv stages
-USE_RESIDUALS=true           # whether to include the dilated ResBlocks
+USE_RESIDUALS=true            # whether to include the dilated ResBlocks
 RES_DILATIONS="1 2 4 8"       # list of dilations for each ResBlock
 
 # ── Masking option ─────────────────────────────────────────────────────────
 MASK_CORNERS=false            # set to true to pass --mask_corners
+
+# ─── New loss options ───────────────────────────────────────────────────────
+USE_PERCEPTUAL_LOSS=false     # set to true to add VGG perceptual term
+USE_SSIM_LOSS=true           # set to true to add SSIM term
+LAMBDA_PERC=0.10              # weight for perceptual loss
+LAMBDA_SSIM=0.10              # weight for SSIM loss
 
 # Create output directory
 mkdir -p "$OUTPUT_DIR"
@@ -75,6 +81,16 @@ CMD="$CMD --res_dilations $RES_DILATIONS"
 if [ "$MASK_CORNERS" = true ]; then
   CMD="$CMD --mask_corners"
 fi
+
+# ─── New loss flags ─────────────────────────────────────────────────────────
+if [ "$USE_PERCEPTUAL_LOSS" = true ]; then
+  CMD="$CMD --use_perceptual_loss --lambda_perc $LAMBDA_PERC"
+fi
+
+if [ "$USE_SSIM_LOSS" = true ]; then
+  CMD="$CMD --use_ssim_loss --lambda_ssim $LAMBDA_SSIM"
+fi
+
 
 # Print & run
 echo "Running: $CMD"

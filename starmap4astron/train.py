@@ -65,6 +65,10 @@ def main():
     parser.add_argument('--gpus',          type=int,   default=1)
     parser.add_argument('--output_dir',    type=str,   default='output',
                         help='Directory to save models and plots')
+    parser.add_argument('--use_perceptual_loss', action='store_true')
+    parser.add_argument('--use_ssim_loss', action='store_true')
+    parser.add_argument('--lambda_perc', type=float, default=0.1)
+    parser.add_argument('--lambda_ssim', type=float, default=0.1)
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
@@ -87,6 +91,10 @@ def main():
         use_residuals    = args.use_residuals,
         res_dilations    = args.res_dilations,
         mask_corners     = args.mask_corners,
+        use_perceptual_loss=args.use_perceptual_loss,
+        use_ssim_loss=args.use_ssim_loss,
+        lambda_perc=args.lambda_perc,
+        lambda_ssim=args.lambda_ssim,
     )
 
     # Prepare datasets & loaders

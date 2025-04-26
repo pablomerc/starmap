@@ -140,8 +140,12 @@ class StarryNPZDataset(Dataset):
         flux_array, image_array = self.data[file_idx]
 
         # 5a) Prepare light curve:
-        lc = flux_array[ex_idx].astype(np.float32)       # 1D array: (N_PTS,)
-        lc_tensor = torch.from_numpy(lc).unsqueeze(0)   # shape: (1, N_PTS)
+        # lc = flux_array[ex_idx].astype(np.float32)       # 1D array: (N_PTS,)
+        # lc_tensor = torch.from_numpy(lc).unsqueeze(0)   # shape: (1, N_PTS)
+
+        # had to change when doing tuning???
+        lc = flux_array[ex_idx].astype(np.float32)       # (N_PTS,)
+        lc_tensor = torch.tensor(lc, dtype=torch.float32).unsqueeze(0)
 
         # 5b) Prepare single-channel image:
         img = image_array[ex_idx]  # shape: (H, W)
@@ -152,8 +156,13 @@ class StarryNPZDataset(Dataset):
         if img.ndim == 2:
             img = img[:, :, None]
 
-        # Apply transforms: ToTensor -> (C=1, H, W) and Resize if set
-        img_tensor = self.img_transform(img)
+        # img_arr = np.array(img, dtype=np.float32, copy=True)
+        # # Apply transforms: ToTensor -> (C=1, H, W) and Resize if set
+        # img_tensor = self.img_transform(img_arr)
+
+        img_tensor = torch.tensor(img, dtype=torch.float32)  # (H, W, C)
+        img_tensor = img_tensor.permute(2, 0, 1)              # (C, H, W)
+
 
         # Return the light curve and image tensors
         return lc_tensor, img_tensor
