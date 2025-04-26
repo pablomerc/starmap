@@ -184,8 +184,38 @@ def main():
         with open(json_path, "w") as f:
             json.dump(loss_data, f, indent=4)
         print(f"Loss data saved ➜ {json_path}")
-
     print("Training completed!")
+
+    # Save one example + reconstruction
+    model.eval()
+    # grab one batch
+    xb, yb = next(iter(val_loader))  # xb: light curve, yb: image
+    xb = xb.to(model.device)
+    with torch.no_grad():
+        ypred = model(xb)  # shape: (B, C, H, W)
+
+    # only keep the first example
+    gt_img = yb[0].cpu().squeeze().numpy()
+    recon_img = ypred[0].cpu().squeeze().numpy()
+
+    # ensure output_dir exists
+    example_dir = os.path.join(args.output_dir, "example")
+    os.makedirs(example_dir, exist_ok=True)
+
+    # save with matplotlib
+    for arr, name in [(gt_img, "sample_input.png"),
+                    (recon_img, "sample_recon.png")]:
+        plt.figure(figsize=(4,4))
+        plt.imshow(arr, cmap='gray', origin='lower')
+        plt.axis('off')
+        plt.tight_layout(pad=0)
+        path = os.path.join(example_dir, name)
+        plt.savefig(path, bbox_inches='tight', pad_inches=0)
+        plt.close()
+        print(f"Saved {name} ➜ {path}")
+
+
+
 
 
 def load_model_for_inference(model_path,
