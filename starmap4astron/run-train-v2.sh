@@ -3,7 +3,7 @@
 
 # ────────────────────────────────────────────────────────────────────────────
 # Activate conda environment first
-CONDA_SH="/Users/pablom.perez/miniconda3/etc/profile.d/conda.sh"
+CONDA_SH="/pdo/users/pablomer/miniconda3/etc/profile.d/conda.sh"
 if [ -f "$CONDA_SH" ]; then
   source "$CONDA_SH"
   conda activate starmap4astro-env
@@ -14,7 +14,7 @@ fi
 
 # ────────────────────────────────────────────────────────────────────────────
 # Required parameters
-DATA_DIR="/Users/pablom.perez/Desktop/MIT-PhD-macbook/starmap/starmap4astron/synthetic_data_output/dataset2/synthetic_starry_data_part_0.npz"
+DATA_DIR="/pdo/users/pablomer/starmap/starmap4astron/synthetic_data_output/dataset2/synthetic_starry_data_part_0.npz"
 
 # ────────────────────────────────────────────────────────────────────────────
 # Optional parameters with their default values
@@ -23,11 +23,11 @@ VAL_SPLIT=0.1                 # Validation split ratio (if no val dir)
 BATCH_SIZE=32                 # Batch size for training
 IMG_SIZE=64                   # Output image size
 LATENT_CHANNELS=256           # Number of latent channels
-GRID_H=8                      # Grid height
-GRID_W=8                      # Grid width
-BASE_CHANNELS=64              # Number of base channels
+GRID_H=16                      # Grid height
+GRID_W=16                      # Grid width
+BASE_CHANNELS=32              # Number of base channels
 LR=1e-3                       # Learning rate
-MAX_EPOCHS=100                # Maximum number of epochs
+MAX_EPOCHS=500                # Maximum number of epochs
 GPUS=1                        # Number of GPUs to use
 OUTPUT_DIR="./output"         # Directory to save models and plots
 
@@ -43,7 +43,7 @@ MASK_CORNERS=false            # set to true to pass --mask_corners
 mkdir -p "$OUTPUT_DIR"
 
 # Build command with all parameters
-CMD="python /Users/pablom.perez/Desktop/MIT-PhD-macbook/starmap/starmap4astron/train.py \
+CMD="python /pdo/users/pablomer/starmap/starmap4astron/train.py \
   --data_dir \"$DATA_DIR\" \
   --batch_size $BATCH_SIZE \
   --img_size $IMG_SIZE \

@@ -1,0 +1,22 @@
+name: starmap4astro-env
+channels:
+  - pytorch          # gets the official PyTorch build
+  - conda-forge
+  - defaults
+dependencies:
+  # ── core ───────────────────────────────────────────────
+  - python=3.10          # 3.9-3.11 also fine
+  - pytorch=2.2.*        # or the latest 2.x you prefer
+  - torchvision          # only needed for image utilities
+  - pytorch-lightning    # your train.py uses Lightning
+  - numpy                # loads .npz files
+  - tqdm                 # progress-bars in train.py
+  - pillow               # image I/O (save/display)
+
+  # ── optional  (comment out if you don't need them) ─────
+  - matplotlib        # quick plots / tensorboard images
+  # - torchmetrics      # if you later add extra metrics
+
+  # ── GPU build (uncomment exactly one of the next two) ──
+  # - cudatoolkit=11.8  # Linux / Windows, NVIDIA GPUs
+  # - cpuonly           # if you are on CPU-only/macOS Intel
