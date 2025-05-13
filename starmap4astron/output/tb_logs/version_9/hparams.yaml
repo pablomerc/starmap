@@ -1,8 +1,0 @@
-base_channels: 64
-grid_size: !!python/tuple
-- 8
-- 8
-img_size: 64
-latent_channels: 256
-lr: 0.0001
-mask_corners: false

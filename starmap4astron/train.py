@@ -14,6 +14,8 @@ from trainers.lc2img_module import LC2ImgModule
 from data.dataset import StarryNPZDataset
 
 
+import numpy as np
+
 class LossHistory(Callback):
     """Collect train & val losses so we can plot them after training."""
     def __init__(self):
@@ -65,6 +67,10 @@ def main():
     parser.add_argument('--gpus',          type=int,   default=1)
     parser.add_argument('--output_dir',    type=str,   default='output',
                         help='Directory to save models and plots')
+    parser.add_argument('--use_perceptual_loss', action='store_true')
+    parser.add_argument('--use_ssim_loss', action='store_true')
+    parser.add_argument('--lambda_perc', type=float, default=0.1)
+    parser.add_argument('--lambda_ssim', type=float, default=0.1)
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
@@ -87,6 +93,10 @@ def main():
         use_residuals    = args.use_residuals,
         res_dilations    = args.res_dilations,
         mask_corners     = args.mask_corners,
+        use_perceptual_loss=args.use_perceptual_loss,
+        use_ssim_loss=args.use_ssim_loss,
+        lambda_perc=args.lambda_perc,
+        lambda_ssim=args.lambda_ssim,
     )
 
     # Prepare datasets & loaders
@@ -111,6 +121,17 @@ def main():
         train_dataset, val_dataset = random_split(
             full_dataset, [train_size, val_size]
         )
+
+    # Optional: Save the dataset
+    val_out = os.path.join(args.output_dir, "validation_set")
+    os.makedirs(val_out, exist_ok=True)
+
+    data = np.load(args.data_dir, allow_pickle=True)
+    idxs = val_dataset.indices
+    val_dict = {k: data[k][idxs] for k in data.files}
+    np.savez(os.path.join(val_out, "val_set.npz"), **val_dict)
+    print(f"Saved validation set ➜ {val_out}")
+
 
     train_loader = DataLoader(
         train_dataset,
@@ -184,8 +205,38 @@ def main():
         with open(json_path, "w") as f:
             json.dump(loss_data, f, indent=4)
         print(f"Loss data saved ➜ {json_path}")
-
     print("Training completed!")
+
+    # Save one example + reconstruction
+    model.eval()
+    # grab one batch
+    xb, yb = next(iter(val_loader))  # xb: light curve, yb: image
+    xb = xb.to(model.device)
+    with torch.no_grad():
+        ypred = model(xb)  # shape: (B, C, H, W)
+
+    # only keep the first example
+    gt_img = yb[0].cpu().squeeze().numpy()
+    recon_img = ypred[0].cpu().squeeze().numpy()
+
+    # ensure output_dir exists
+    example_dir = os.path.join(args.output_dir, "example")
+    os.makedirs(example_dir, exist_ok=True)
+
+    # save with matplotlib
+    for arr, name in [(gt_img, "sample_input.png"),
+                    (recon_img, "sample_recon.png")]:
+        plt.figure(figsize=(4,4))
+        plt.imshow(arr, cmap='gray', origin='lower')
+        plt.axis('off')
+        plt.tight_layout(pad=0)
+        path = os.path.join(example_dir, name)
+        plt.savefig(path, bbox_inches='tight', pad_inches=0)
+        plt.close()
+        print(f"Saved {name} ➜ {path}")
+
+
+
 
 
 def load_model_for_inference(model_path,

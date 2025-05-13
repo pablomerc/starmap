@@ -1,1 +1,25 @@
 venv-starmap/
+# Ignore output folders
+output/
+starmap4astron/output/
+starmap4astron/output_Apr27/
+starmap4astron/output_Apr27_32x32/
+starmap4astron/output_Apr27_b64_lc256/
+starmap4astron/output_Apr27_base64/
+starmap4astron/output_Apr27_final/
+starmap4astron/output_Apr28/
+starmap4astron/output_perception_loss/
+starmap4astron/synthetic_data_output/
+starmap4astron/hpam_tuning_output/
+output_May02/
+# Ignore .pyc files and __pycache__ directories
+*.pyc
+__pycache__/
+
+# Ignore Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore other temporary files
+*.log
+*.tmp
+*.bak

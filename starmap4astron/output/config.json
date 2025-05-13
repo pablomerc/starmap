@@ -1,13 +1,13 @@
 {
-    "data_dir": "/Users/pablom.perez/Desktop/MIT-PhD-macbook/starmap/starmap4astron/synthetic_data_output/dataset2/synthetic_starry_data_part_0.npz",
+    "data_dir": "/pdo/users/pablomer/starmap/starmap4astron/synthetic_data_output/dataset2/synthetic_starry_data_part_0.npz",
     "val_data_dir": null,
     "val_split": 0.1,
     "batch_size": 32,
-    "img_size": 64,
-    "latent_channels": 256,
-    "grid_h": 8,
-    "grid_w": 8,
-    "base_channels": 64,
+    "img_size": 256,
+    "latent_channels": 128,
+    "grid_h": 16,
+    "grid_w": 16,
+    "base_channels": 32,
     "num_pyramid": 3,
     "use_residuals": true,
     "res_dilations": [
@@ -16,9 +16,13 @@
         4,
         8
     ],
-    "mask_corners": false,
+    "mask_corners": true,
     "lr": 0.001,
-    "max_epochs": 2,
+    "max_epochs": 1000,
     "gpus": 1,
-    "output_dir": "./output"
+    "output_dir": "./output",
+    "use_perceptual_loss": false,
+    "use_ssim_loss": true,
+    "lambda_perc": 0.1,
+    "lambda_ssim": 0.1
 }
