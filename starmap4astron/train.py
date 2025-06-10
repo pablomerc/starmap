@@ -14,6 +14,8 @@ from trainers.lc2img_module import LC2ImgModule
 from data.dataset import StarryNPZDataset
 
 
+import numpy as np
+
 class LossHistory(Callback):
     """Collect train & val losses so we can plot them after training."""
     def __init__(self):
@@ -119,6 +121,17 @@ def main():
         train_dataset, val_dataset = random_split(
             full_dataset, [train_size, val_size]
         )
+
+    # Optional: Save the dataset
+    val_out = os.path.join(args.output_dir, "validation_set")
+    os.makedirs(val_out, exist_ok=True)
+
+    data = np.load(args.data_dir, allow_pickle=True)
+    idxs = val_dataset.indices
+    val_dict = {k: data[k][idxs] for k in data.files}
+    np.savez(os.path.join(val_out, "val_set.npz"), **val_dict)
+    print(f"Saved validation set ➜ {val_out}")
+
 
     train_loader = DataLoader(
         train_dataset,

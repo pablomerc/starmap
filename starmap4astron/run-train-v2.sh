@@ -3,7 +3,7 @@
 
 # ────────────────────────────────────────────────────────────────────────────
 # Activate conda environment first
-CONDA_SH="/Users/pablom.perez/miniconda3/etc/profile.d/conda.sh"
+CONDA_SH="/pdo/users/pablomer/miniconda3/etc/profile.d/conda.sh"
 if [ -f "$CONDA_SH" ]; then
   source "$CONDA_SH"
   conda activate starmap4astro-env
@@ -14,8 +14,8 @@ fi
 
 # ────────────────────────────────────────────────────────────────────────────
 # Required parameters
-DATA_DIR="/Users/pablom.perez/Desktop/MIT-PhD-macbook/starmap/starmap4astron/synthetic_data_output/dataset2/synthetic_starry_data_part_0.npz"
-
+# DATA_DIR="/pdo/users/pablomer/starmap/starmap4astron/synthetic_data_output/dataset2/synthetic_starry_data_part_0.npz"
+DATA_DIR="/pdo/users/pablomer/starmap/starmap4astron/synthetic_data_output/dataset_combined/synthetic_starry_data_combined.npz"
 # ────────────────────────────────────────────────────────────────────────────
 # Optional parameters with their default values
 VAL_DATA_DIR=""               # Leave empty for automatic train/val split
@@ -25,11 +25,11 @@ IMG_SIZE=256                   # Output image size
 LATENT_CHANNELS=128           # Number of latent channels
 GRID_H=16                      # Grid height
 GRID_W=16                      # Grid width
-BASE_CHANNELS=32              # Number of base channels
-LR=1e-3                       # Learning rate
-MAX_EPOCHS=20                # Maximum number of epochs
+BASE_CHANNELS=64              # Number of base channels
+LR=5e-4                       # Learning rate
+MAX_EPOCHS=50                # Maximum number of epochs
 GPUS=1                        # Number of GPUs to use
-OUTPUT_DIR="./output"         # Directory to save models and plots
+OUTPUT_DIR="./output_May02"         # Directory to save models and plots
 
 # ── New encoder hyper-parameters ───────────────────────────────────────────
 NUM_PYRAMID=3                 # how many extra down-sampling conv stages
@@ -37,7 +37,7 @@ USE_RESIDUALS=true            # whether to include the dilated ResBlocks
 RES_DILATIONS="1 2 4 8"       # list of dilations for each ResBlock
 
 # ── Masking option ─────────────────────────────────────────────────────────
-MASK_CORNERS=false            # set to true to pass --mask_corners
+MASK_CORNERS=true            # set to true to pass --mask_corners
 
 # ─── New loss options ───────────────────────────────────────────────────────
 USE_PERCEPTUAL_LOSS=false     # set to true to add VGG perceptual term
@@ -49,7 +49,7 @@ LAMBDA_SSIM=0.10              # weight for SSIM loss
 mkdir -p "$OUTPUT_DIR"
 
 # Build command with all parameters
-CMD="python /Users/pablom.perez/Desktop/MIT-PhD-macbook/starmap/starmap4astron/train.py \
+CMD="python /pdo/users/pablomer/starmap/starmap4astron/train.py \
   --data_dir \"$DATA_DIR\" \
   --batch_size $BATCH_SIZE \
   --img_size $IMG_SIZE \
