@@ -1,1 +1,8 @@
 venv-starmap/
+starmap4astron/output/
+*.png
+**/optuna_output/
+*.pptx
+**/hpam_tuning_output/
+*.psd
+
